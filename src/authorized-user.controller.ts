@@ -1,9 +1,14 @@
-import { Controller, Get, Post, Put, Patch, Delete, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { AuthorizedUserService } from './authorized-user.service';
 import { CreateAuthorizedUserDto, UpdateAuthorizedUserDto, PatchAuthorizedUserDto } from './dtos/authorized-user.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
+import { AuthGuard } from './guards/auth.guard';
+import { User } from './decorators/user.decorator';
+import { AuthenticatedUser } from './interfaces/authenticated-user.interface';
 
 @ApiTags('Authorized Users')
+@ApiBearerAuth('JWT-auth')
+@UseGuards(AuthGuard)
 @Controller('reservations/:reservationId/authorized-users')
 export class AuthorizedUserController {
   constructor(private readonly authorizedUserService: AuthorizedUserService) {}
@@ -13,6 +18,8 @@ export class AuthorizedUserController {
   @ApiParam({ name: 'reservationId', type: 'string', description: 'ID da reserva' })
   @ApiBody({ type: CreateAuthorizedUserDto })
   @ApiResponse({ status: 201, description: 'Usuário autorizado adicionado com sucesso.' })
+  @ApiResponse({ status: 401, description: 'Token de autenticação ausente, inválido ou expirado.' })
+  @ApiResponse({ status: 403, description: 'Acesso negado. Usuário não possui permissão para esta operação.' })
   @ApiResponse({ status: 404, description: 'Reserva não encontrada.' })
   create(
     @Param('reservationId') reservationId: string,
@@ -25,6 +32,8 @@ export class AuthorizedUserController {
   @ApiOperation({ summary: 'Listar todos os usuários autorizados de uma reserva' })
   @ApiParam({ name: 'reservationId', type: 'string', description: 'ID da reserva' })
   @ApiResponse({ status: 200, description: 'Lista de usuários autorizados retornada com sucesso.' })
+  @ApiResponse({ status: 401, description: 'Token de autenticação ausente, inválido ou expirado.' })
+  @ApiResponse({ status: 403, description: 'Acesso negado. Usuário não possui permissão para esta operação.' })
   @ApiResponse({ status: 404, description: 'Reserva não encontrada.' })
   findAll(@Param('reservationId') reservationId: string) {
     return this.authorizedUserService.findByReservation(reservationId);
@@ -35,6 +44,8 @@ export class AuthorizedUserController {
   @ApiParam({ name: 'reservationId', type: 'string', description: 'ID da reserva' })
   @ApiParam({ name: 'id', type: 'string', description: 'ID do usuário autorizado' })
   @ApiResponse({ status: 200, description: 'Usuário autorizado encontrado.' })
+  @ApiResponse({ status: 401, description: 'Token de autenticação ausente, inválido ou expirado.' })
+  @ApiResponse({ status: 403, description: 'Acesso negado. Usuário não possui permissão para esta operação.' })
   @ApiResponse({ status: 404, description: 'Usuário autorizado ou reserva não encontrada.' })
   findOne(
     @Param('reservationId') reservationId: string,
@@ -49,6 +60,8 @@ export class AuthorizedUserController {
   @ApiParam({ name: 'id', type: 'string', description: 'ID do usuário autorizado' })
   @ApiBody({ type: UpdateAuthorizedUserDto })
   @ApiResponse({ status: 200, description: 'Usuário autorizado atualizado com sucesso.' })
+  @ApiResponse({ status: 401, description: 'Token de autenticação ausente, inválido ou expirado.' })
+  @ApiResponse({ status: 403, description: 'Acesso negado. Usuário não possui permissão para esta operação.' })
   @ApiResponse({ status: 404, description: 'Usuário autorizado ou reserva não encontrada.' })
   update(
     @Param('reservationId') reservationId: string,
@@ -64,6 +77,8 @@ export class AuthorizedUserController {
   @ApiParam({ name: 'id', type: 'string', description: 'ID do usuário autorizado' })
   @ApiBody({ type: PatchAuthorizedUserDto })
   @ApiResponse({ status: 200, description: 'Usuário autorizado atualizado parcialmente com sucesso.' })
+  @ApiResponse({ status: 401, description: 'Token de autenticação ausente, inválido ou expirado.' })
+  @ApiResponse({ status: 403, description: 'Acesso negado. Usuário não possui permissão para esta operação.' })
   @ApiResponse({ status: 404, description: 'Usuário autorizado ou reserva não encontrada.' })
   patch(
     @Param('reservationId') reservationId: string,
@@ -78,6 +93,8 @@ export class AuthorizedUserController {
   @ApiParam({ name: 'reservationId', type: 'string', description: 'ID da reserva' })
   @ApiParam({ name: 'id', type: 'string', description: 'ID do usuário autorizado' })
   @ApiResponse({ status: 200, description: 'Usuário autorizado removido com sucesso.' })
+  @ApiResponse({ status: 401, description: 'Token de autenticação ausente, inválido ou expirado.' })
+  @ApiResponse({ status: 403, description: 'Acesso negado. Usuário não possui permissão para esta operação.' })
   @ApiResponse({ status: 404, description: 'Usuário autorizado ou reserva não encontrada.' })
   remove(
     @Param('reservationId') reservationId: string,
