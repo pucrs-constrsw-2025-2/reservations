@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AuthorizedUser } from './entities/authorized-user.entity';
-import { Reservation } from './entities/reservation.entity';
-import { CreateAuthorizedUserDto, UpdateAuthorizedUserDto, PatchAuthorizedUserDto } from './dtos/authorized-user.dto';
+import { AuthorizedUser } from '../entities/authorized-user.entity';
+import { Reservation } from '../entities/reservation.entity';
+import { CreateAuthorizedUserDto, UpdateAuthorizedUserDto, PatchAuthorizedUserDto } from '../dtos/authorized-user.dto';
 
 @Injectable()
 export class AuthorizedUserService {

@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthorizedUserController } from '../src/authorized-user.controller';
-import { AuthorizedUserService } from '../src/authorized-user.service';
-import { AuthGuard } from '../src/guards/auth.guard';
+import { AuthorizedUserController } from './authorized-user.controller';
+import { AuthorizedUserService } from './authorized-user.service';
+import { AuthGuard } from '../guards/auth.guard';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
-import { CreateAuthorizedUserDto, UpdateAuthorizedUserDto, PatchAuthorizedUserDto } from '../src/dtos/authorized-user.dto';
+import { CreateAuthorizedUserDto, UpdateAuthorizedUserDto, PatchAuthorizedUserDto } from '../dtos/authorized-user.dto';
 
 describe('AuthorizedUserController', () => {
   let controller: AuthorizedUserController;

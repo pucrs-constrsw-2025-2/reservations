@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ReservationController } from '../src/reservation.controller';
-import { ReservationService } from '../src/reservation.service';
-import { AuthGuard } from '../src/guards/auth.guard';
+import { ReservationController } from './reservation.controller';
+import { ReservationService } from './reservation.service';
+import { AuthGuard } from '../guards/auth.guard';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
-import { CreateReservationDto } from '../src/dtos/create-reservation.dto';
-import { UpdateReservationDto } from '../src/dtos/update-reservation.dto';
-import { PatchReservationDto } from '../src/dtos/patch-reservation.dto';
+import { CreateReservationDto } from '../dtos/create-reservation.dto';
+import { UpdateReservationDto } from '../dtos/update-reservation.dto';
+import { PatchReservationDto } from '../dtos/patch-reservation.dto';
 import { ExecutionContext } from '@nestjs/common';
 
 describe('ReservationController', () => {

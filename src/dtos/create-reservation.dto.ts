@@ -24,4 +24,14 @@ export class CreateReservationDto {
   @ValidateNested({ each: true })
   @Type(() => AuthorizedUserDto)
   authorizedUsers?: AuthorizedUserDto[];
+
+  @ApiPropertyOptional({ type: 'string', description: 'ID do recurso dessa reserva' })
+  @IsOptional()
+  @IsString()
+  resource_id?: string;
+
+  @ApiPropertyOptional({ type: 'string', description: 'ID da aula dessa reserva' })
+  @IsOptional()
+  @IsString()
+  lesson_id?: string;
 }

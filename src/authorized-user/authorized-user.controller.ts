@@ -1,10 +1,8 @@
 import { Controller, Get, Post, Put, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { AuthorizedUserService } from './authorized-user.service';
-import { CreateAuthorizedUserDto, UpdateAuthorizedUserDto, PatchAuthorizedUserDto } from './dtos/authorized-user.dto';
+import { CreateAuthorizedUserDto, UpdateAuthorizedUserDto, PatchAuthorizedUserDto } from '../dtos/authorized-user.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
-import { AuthGuard } from './guards/auth.guard';
-import { User } from './decorators/user.decorator';
-import { AuthenticatedUser } from './interfaces/authenticated-user.interface';
+import { AuthGuard } from '../guards/auth.guard';
 
 @ApiTags('Authorized Users')
 @ApiBearerAuth('JWT-auth')

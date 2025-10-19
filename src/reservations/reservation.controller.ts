@@ -1,12 +1,11 @@
 import { Controller, Get, Post, Put, Patch, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { ReservationService } from './reservation.service';
-import { CreateReservationDto } from './dtos/create-reservation.dto';
-import { UpdateReservationDto } from './dtos/update-reservation.dto';
-import { PatchReservationDto } from './dtos/patch-reservation.dto';
+import { CreateReservationDto } from '../dtos/create-reservation.dto';
+import { UpdateReservationDto } from '../dtos/update-reservation.dto';
+import { PatchReservationDto } from '../dtos/patch-reservation.dto';
+import { QueryReservationDto } from '../dtos/query-reservation.dto';
+import { AuthGuard } from '../guards/auth.guard'
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
-import { AuthGuard } from './guards/auth.guard';
-import { User } from './decorators/user.decorator';
-import { AuthenticatedUser } from './interfaces/authenticated-user.interface';
 
 @ApiTags('Reservation')
 @ApiBearerAuth('JWT-auth')
@@ -26,12 +25,16 @@ export class ReservationController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Listar reservas (com suporte a query string)' })
+  @ApiOperation({ summary: 'Listar reservas (com suporte a query string simples e complexa)' })
   @ApiResponse({ status: 200, description: 'Lista de reservas.' })
   @ApiResponse({ status: 401, description: 'Token de autenticação ausente, inválido ou expirado.' })
   @ApiResponse({ status: 403, description: 'Acesso negado. Usuário não possui permissão para esta operação.' })
-  @ApiQuery({ name: 'query', required: false, description: 'Filtros de busca (query string simples ou complexa)' })
-  findAll(@Query() query: any) {
+  @ApiQuery({ name: 'status', required: false, description: 'Filtrar por status (ex: status=Liberado ou status={neq}Reservado)' })
+  @ApiQuery({ name: 'initial_date', required: false, description: 'Filtrar por data inicial (ex: initial_date={gteq}2025-10-19)' })
+  @ApiQuery({ name: 'final_date', required: false, description: 'Filtrar por data final (ex: final_date={lt}2025-10-30)' })
+  @ApiQuery({ name: 'description', required: false, description: 'Filtrar por descrição (ex: description={like}%reuniao%)' })
+  @ApiQuery({ name: 'quantity', required: false, description: 'Filtrar por quantidade (ex: quantity={lteq}2.5)' })
+  findAll(@Query() query: QueryReservationDto) {
     return this.reservationService.findAll(query);
   }
 
