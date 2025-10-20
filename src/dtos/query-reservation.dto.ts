@@ -12,9 +12,9 @@ export class QueryOperator {
 
 export class QueryReservationDto {
   @ApiPropertyOptional({ 
-    description: 'Status filter with optional operator (ex: status=Liberado or status={neq}Reservado)' 
+    description: 'Reservation ID filter with optional operator (ex: reservation_id=uuid or reservation_id={neq}uuid)' 
   })
-  status?: string;
+  reservation_id?: string;
 
   @ApiPropertyOptional({ 
     description: 'Initial date filter with optional operator (ex: initial_date={gteq}2025-10-19)' 
@@ -22,17 +22,22 @@ export class QueryReservationDto {
   initial_date?: string;
 
   @ApiPropertyOptional({ 
-    description: 'Final date filter with optional operator (ex: final_date={lt}2025-10-30)' 
+    description: 'End date filter with optional operator (ex: end_date={lt}2025-10-30)' 
   })
-  final_date?: string;
+  end_date?: string;
 
   @ApiPropertyOptional({ 
-    description: 'Description filter with optional operator (ex: description={like}%reuniao%)' 
+    description: 'Details filter with optional operator (ex: details={like}%reuniao%)' 
   })
-  description?: string;
+  details?: string;
 
   @ApiPropertyOptional({ 
-    description: 'Quantity filter with optional operator (ex: quantity={lteq}2.5)' 
+    description: 'Resource ID filter with optional operator (ex: resource_id=uuid)' 
   })
-  quantity?: string;
+  resource_id?: string;
+
+  @ApiPropertyOptional({ 
+    description: 'Lesson ID filter with optional operator (ex: lesson_id=uuid)' 
+  })
+  lesson_id?: string;
 }

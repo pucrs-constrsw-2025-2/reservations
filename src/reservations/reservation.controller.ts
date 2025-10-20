@@ -29,11 +29,12 @@ export class ReservationController {
   @ApiResponse({ status: 200, description: 'Lista de reservas.' })
   @ApiResponse({ status: 401, description: 'Token de autenticação ausente, inválido ou expirado.' })
   @ApiResponse({ status: 403, description: 'Acesso negado. Usuário não possui permissão para esta operação.' })
-  @ApiQuery({ name: 'status', required: false, description: 'Filtrar por status (ex: status=Liberado ou status={neq}Reservado)' })
+  @ApiQuery({ name: 'reservation_id', required: false, description: 'Filtrar por ID da reserva (ex: reservation_id=uuid ou reservation_id={neq}uuid)' })
   @ApiQuery({ name: 'initial_date', required: false, description: 'Filtrar por data inicial (ex: initial_date={gteq}2025-10-19)' })
-  @ApiQuery({ name: 'final_date', required: false, description: 'Filtrar por data final (ex: final_date={lt}2025-10-30)' })
-  @ApiQuery({ name: 'description', required: false, description: 'Filtrar por descrição (ex: description={like}%reuniao%)' })
-  @ApiQuery({ name: 'quantity', required: false, description: 'Filtrar por quantidade (ex: quantity={lteq}2.5)' })
+  @ApiQuery({ name: 'end_date', required: false, description: 'Filtrar por data final (ex: end_date={lt}2025-10-30)' })
+  @ApiQuery({ name: 'details', required: false, description: 'Filtrar por detalhes (ex: details={like}%reuniao%)' })
+  @ApiQuery({ name: 'resource_id', required: false, description: 'Filtrar por ID do recurso (ex: resource_id=uuid)' })
+  @ApiQuery({ name: 'lesson_id', required: false, description: 'Filtrar por ID da aula (ex: lesson_id=uuid)' })
   findAll(@Query() query: QueryReservationDto) {
     return this.reservationService.findAll(query);
   }

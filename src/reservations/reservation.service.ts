@@ -105,18 +105,13 @@ export class ReservationService {
   private parseValue(key: string, value: string) {
     switch (key) {
       case 'initial_date':
-      case 'final_date':
+      case 'end_date':
         return new Date(value);
-      case 'quantity':
-      case 'duration':
-        return parseFloat(value);
       case 'reservation_id':
-      case 'room_id':
-      case 'user_id':
-        return value; // Keep as string for IDs
-      case 'status':
-      case 'description':
-      case 'title':
+      case 'resource_id':
+      case 'lesson_id':
+        return value; // Keep as string for UUIDs
+      case 'details':
         return value; // Keep as string for text fields
       default:
         return value;

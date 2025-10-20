@@ -25,13 +25,11 @@ export class CreateReservationDto {
   @Type(() => AuthorizedUserDto)
   authorizedUsers?: AuthorizedUserDto[];
 
-  @ApiPropertyOptional({ type: 'string', description: 'ID do recurso dessa reserva' })
+  @ApiPropertyOptional({ type: 'string', format: 'uuid', description: 'ID do recurso dessa reserva' })
   @IsOptional()
-  @IsString()
   resource_id?: string;
 
-  @ApiPropertyOptional({ type: 'string', description: 'ID da aula dessa reserva' })
+  @ApiPropertyOptional({ type: 'string', format: 'uuid', description: 'ID da aula dessa reserva' })
   @IsOptional()
-  @IsString()
   lesson_id?: string;
 }
