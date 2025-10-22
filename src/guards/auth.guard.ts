@@ -32,24 +32,22 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('Token not provided');
     }
 
-    const keycloakGatewayUrl = this.configService.get<string>('OAUTH_INTERNAL_HOST') + ':' + this.configService.get<string>('OAUTH_INTERNAL_PORT');
-    const meEndpoint = this.configService.get<string>('OAUTH_ME_ENDPOINT');
+    const keycloakGatewayUrl = 'http://' + this.configService.get<string>('OAUTH_INTERNAL_HOST') + ':' + this.configService.get<string>('OAUTH_INTERNAL_API_PORT');
     
-    if (!keycloakGatewayUrl || !meEndpoint) {
+    if (!keycloakGatewayUrl) {
       throw new UnauthorizedException('Keycloak configuration not found');
     }
 
-    const validationUrl = `${keycloakGatewayUrl}/${meEndpoint}`;
+    const validationUrl = `${keycloakGatewayUrl}/validate`;
 
     return this.httpService
-      .get(validationUrl, {
+      .post(validationUrl, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       })
       .pipe(
         map((response) => {
-          console.log(response)
           if (response.status === HttpStatus.OK && response.data) {
             // Store user information in request for later use
             request['user'] = response.data;

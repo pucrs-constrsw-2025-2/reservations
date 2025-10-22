@@ -4,6 +4,6 @@ COPY package*.json ./
 RUN npm ci
 COPY . .
 RUN npm run build
-EXPOSE 3001
-ENV PORT=3001
+EXPOSE 8080
+ENV PORT=8080
 CMD ["node", "dist/main.js"]
