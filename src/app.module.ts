@@ -17,11 +17,11 @@ import { HealthController } from './health.controller';
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DATABASE_HOST || 'localhost',
-      port: process.env.DATABASE_PORT ? parseInt(process.env.DATABASE_PORT, 10) : 5432,
-      username: process.env.DATABASE_USER || 'postgres',
-      password: process.env.DATABASE_PASSWORD || 'postgres',
-      database: process.env.DATABASE_NAME || 'reservations',
+      host: process.env.POSTGRESQL_HOST || 'localhost',
+      port: process.env.POSTGRESQL_PORT ? parseInt(process.env.POSTGRESQL_PORT, 10) : 5432,
+      username: process.env.POSTGRESQL_USER || 'postgres',
+      password: process.env.POSTGRESQL_PASSWORD || 'postgres',
+      database: process.env.POSTGRESQL_DB || 'reservations',
       autoLoadEntities: true,
       synchronize: true, // Em produção, use migrações!
     }),
