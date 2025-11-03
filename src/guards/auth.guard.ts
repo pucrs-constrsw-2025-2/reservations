@@ -25,12 +25,6 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('Missing or invalid Authorization header');
     }   
 
-    const token = authHeader?.substring(7); // Remove 'Bearer ' prefix
-
-    if (!token || token?.trim() === '') {
-      throw new UnauthorizedException('Token not provided');
-    }
-
     const keycloakGatewayUrl = 'http://' + this.configService.get<string>('OAUTH_INTERNAL_HOST') + ':' + this.configService.get<string>('OAUTH_INTERNAL_API_PORT');
     
     if (!keycloakGatewayUrl) {
@@ -40,13 +34,15 @@ export class AuthGuard implements CanActivate {
     const validationUrl = `${keycloakGatewayUrl}/validate`;
 
     return this.httpService
-      .post(validationUrl, {
+      .post(validationUrl, {}, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          accept: 'application/json',
+          Authorization: authHeader,
         },
       })
       .pipe(
         map((response) => {
+          console.log(response)
           if (response.status === HttpStatus.OK && response.data) {
             // Store user information in request for later use
             request['user'] = response.data;
