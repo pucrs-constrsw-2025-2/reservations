@@ -4,7 +4,7 @@
 
 ## Descrição
 
-API RESTful para gerenciamento de reservas de recursos (salas, equipamentos, etc.) vinculados a aulas. Suporta operações CRUD completas com validação de dados, autenticação via OAuth (Keycloak Gateway) e consultas avançadas com operadores personalizados.
+API RESTful para gerenciamento de reservas de recursos vinculados a aulas. Suporta operações CRUD completas com validação de dados, autenticação via OAuth (Keycloak Gateway) e consultas avançadas com operadores personalizados.
 
 ## 🔐 Autenticação
 
@@ -77,25 +77,14 @@ src/
 ### Setup
 
 ```bash
-# Instalar dependências
-npm install
-
-# Configurar variáveis de ambiente
-cp .env.example .env  # Edite conforme necessário
-
-# Executar em modo de desenvolvimento
-npm run start:dev
-
-# Build para produção
-npm run build
-npm run start:prod
+No repositório base use o docker-compose.yml para subir o container reservations com suas dependências.
 ```
 
 ### Acessar Documentação Swagger
 
 Após iniciar a aplicação, acesse:
 
-**http://localhost:8080/api**
+**http://localhost:8086/api**
 
 A documentação interativa Swagger permite:
 
