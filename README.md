@@ -1,98 +1,270 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Reservations API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+**Microservice de Gerenciamento de Reservas** desenvolvido com [NestJS](https://nestjs.com/) e TypeScript.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Descrição
 
-## Description
+API RESTful para gerenciamento de reservas de recursos (salas, equipamentos, etc.) vinculados a aulas. Suporta operações CRUD completas com validação de dados, autenticação via OAuth (Keycloak Gateway) e consultas avançadas com operadores personalizados.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🔐 Autenticação
 
-## Project setup
+**IMPORTANTE:** Todos os endpoints requerem autenticação via Bearer token JWT obtido através do **OAuth Service (Keycloak Gateway)**.
+
+### Fluxo de Autenticação
+
+1. **Obter token** através do OAuth service (`/login` endpoint)
+2. **Incluir token** no header `Authorization: Bearer <token>` em todas as requisições
+3. O **AuthGuard** valida o token automaticamente via `POST http://{OAUTH_INTERNAL_HOST}:{OAUTH_INTERNAL_API_PORT}/validate`
+
+### Variáveis de Ambiente Necessárias
 
 ```bash
-$ npm install
+# OAuth Service Configuration
+OAUTH_INTERNAL_HOST=localhost
+OAUTH_INTERNAL_API_PORT=3000
+
+# Database Configuration
+POSTGRESQL_HOST=localhost
+POSTGRESQL_PORT=5432
+POSTGRESQL_USER=postgres
+POSTGRESQL_PASSWORD=postgres
+POSTGRESQL_DB=reservations
+
+# Application Configuration
+PORT=8080
 ```
 
-## Compile and run the project
+## 📁 Estrutura do Projeto
+
+```
+src/
+├── app.module.ts                    # Módulo raiz da aplicação
+├── main.ts                          # Ponto de entrada (bootstrap + Swagger)
+├── health.controller.ts             # Health check endpoint
+├── authorized-user/                 # Módulo de usuários autorizados
+│   ├── authorized-user.controller.ts
+│   └── authorized-user.service.ts
+├── decorators/                      # Custom decorators
+│   └── user.decorator.ts
+├── dtos/                           # Data Transfer Objects
+│   ├── authorized-user.dto.ts
+│   ├── create-reservation.dto.ts
+│   ├── update-reservation.dto.ts
+│   ├── patch-reservation.dto.ts
+│   └── query-reservation.dto.ts
+├── entities/                       # TypeORM Entities
+│   ├── authorized-user.entity.ts
+│   └── reservation.entity.ts
+├── guards/                         # Authentication Guards
+│   ├── auth.guard.ts
+│   └── auth.guard.spec.ts
+├── interfaces/                     # TypeScript Interfaces
+└── reservations/                   # Módulo principal de reservas
+    ├── reservation.controller.ts   # REST endpoints
+    ├── reservation.service.ts      # Business logic
+    ├── reservation.module.ts
+    └── reservation.service.spec.ts # Unit tests
+```
+
+## 🚀 Instalação e Execução
+
+### Pré-requisitos
+
+- Node.js >= 18
+- PostgreSQL >= 14
+- OAuth Service (Keycloak Gateway) em execução
+
+### Setup
 
 ```bash
-# development
-$ npm run start
+# Instalar dependências
+npm install
 
-# watch mode
-$ npm run start:dev
+# Configurar variáveis de ambiente
+cp .env.example .env  # Edite conforme necessário
 
-# production mode
-$ npm run start:prod
+# Executar em modo de desenvolvimento
+npm run start:dev
+
+# Build para produção
+npm run build
+npm run start:prod
 ```
 
-## Run tests
+### Acessar Documentação Swagger
+
+Após iniciar a aplicação, acesse:
+
+**http://localhost:8080/api**
+
+A documentação interativa Swagger permite:
+
+- ✅ Visualizar todos os endpoints
+- ✅ Testar requisições diretamente
+- ✅ Autenticar com Bearer token (clique no botão "Authorize")
+- ✅ Ver schemas de request/response
+
+## 📋 Endpoints Disponíveis
+
+### Health Check
+
+```http
+GET /health
+```
+
+Retorna o status da aplicação (não requer autenticação).
+
+### Reservations
+
+Todos os endpoints abaixo requerem autenticação via Bearer token:
+
+| Método   | Endpoint           | Descrição                                 |
+| -------- | ------------------ | ----------------------------------------- |
+| `POST`   | `/reservation`     | Criar nova reserva                        |
+| `GET`    | `/reservation`     | Listar reservas (suporta query operators) |
+| `GET`    | `/reservation/:id` | Buscar reserva por ID                     |
+| `PUT`    | `/reservation/:id` | Atualizar reserva (substituição completa) |
+| `PATCH`  | `/reservation/:id` | Atualizar reserva (parcial)               |
+| `DELETE` | `/reservation/:id` | Remover reserva                           |
+
+### Authorized Users
+
+| Método   | Endpoint               | Descrição                     |
+| -------- | ---------------------- | ----------------------------- |
+| `POST`   | `/authorized-user`     | Criar novo usuário autorizado |
+| `GET`    | `/authorized-user`     | Listar usuários autorizados   |
+| `GET`    | `/authorized-user/:id` | Buscar usuário por ID         |
+| `PUT`    | `/authorized-user/:id` | Atualizar usuário             |
+| `PATCH`  | `/authorized-user/:id` | Atualizar usuário (parcial)   |
+| `DELETE` | `/authorized-user/:id` | Remover usuário               |
+
+## 🔍 Query Operators
+
+O endpoint `GET /reservation` suporta filtros avançados:
+
+### Operadores Disponíveis
+
+| Operador                  | Sintaxe                 | Descrição                        | Exemplo                         |
+| ------------------------- | ----------------------- | -------------------------------- | ------------------------------- |
+| **Equals**                | `field=value`           | Igualdade exata                  | `resource_id=uuid-123`          |
+| **Not Equal**             | `field={neq}value`      | Diferente de                     | `resource_id={neq}uuid-123`     |
+| **Greater Than**          | `field={gt}value`       | Maior que                        | `initial_date={gt}2025-10-01`   |
+| **Greater Than or Equal** | `field={gteq}value`     | Maior ou igual                   | `initial_date={gteq}2025-10-01` |
+| **Less Than**             | `field={lt}value`       | Menor que                        | `end_date={lt}2025-12-31`       |
+| **Less Than or Equal**    | `field={lteq}value`     | Menor ou igual                   | `end_date={lteq}2025-12-31`     |
+| **Like**                  | `field={like}%pattern%` | Busca parcial (case-insensitive) | `details={like}%reunião%`       |
+
+### Exemplos de Query
 
 ```bash
-# unit tests
-$ npm run test
+# Buscar reservas de um recurso específico
+GET /reservation?resource_id=abc-123
 
-# e2e tests
-$ npm run test:e2e
+# Reservas a partir de 19/10/2025
+GET /reservation?initial_date={gteq}2025-10-19
 
-# test coverage
-$ npm run test:cov
+# Reservas que terminam antes de 31/12/2025
+GET /reservation?end_date={lt}2025-12-31
+
+# Detalhes contendo "reunião" (case-insensitive)
+GET /reservation?details={like}%reunião%
+
+# Combinar múltiplos filtros
+GET /reservation?resource_id=abc-123&initial_date={gteq}2025-10-19&details={like}%sala%
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## 🧪 Testes
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Unit tests
+npm run test
+
+# Unit tests com watch
+npm run test:watch
+
+# E2E tests (requer PostgreSQL em execução)
+npm run test:e2e
+
+# Coverage report
+npm run test:cov
+
+# PowerShell script para E2E com setup automático
+.\run-tests.ps1
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Executar Testes com SonarQube
 
-## Resources
+```powershell
+# A partir de backend/utils/sonarqube
+.\run-reservations-sonar.ps1
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+Este script:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+1. Executa unit tests com coverage
+2. Gera relatórios lcov e JUnit XML
+3. Envia resultados para SonarQube
 
-## Support
+## 🐳 Docker
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+O projeto inclui um `Dockerfile` pronto para produção:
 
-## Stay in touch
+```bash
+# Build da imagem
+docker build -t reservations-api .
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+# Executar container
+docker run -p 8080:8080 --env-file .env reservations-api
+```
 
-## License
+## 📚 Documentação Adicional
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- [AUTHENTICATION.md](./AUTHENTICATION.md) - Detalhes completos sobre autenticação OAuth/Keycloak
+- [TEST_README.md](./TEST_README.md) - Guia detalhado de testes e2e
+- [Swagger UI](http://localhost:8080/api) - Documentação interativa da API
+
+## 🛠️ Tecnologias Utilizadas
+
+- **Framework:** NestJS 11
+- **Linguagem:** TypeScript 5.7
+- **ORM:** TypeORM 0.3
+- **Database:** PostgreSQL 14+
+- **Validação:** class-validator + class-transformer
+- **Documentação:** Swagger/OpenAPI
+- **Auth:** JWT via OAuth Service (Keycloak Gateway)
+- **HTTP Client:** Axios (via @nestjs/axios)
+- **Testes:** Jest + Supertest
+
+## 🔧 Scripts Disponíveis
+
+| Script              | Descrição                   |
+| ------------------- | --------------------------- |
+| `npm run start`     | Inicia em modo produção     |
+| `npm run start:dev` | Inicia com hot-reload       |
+| `npm run build`     | Build para produção         |
+| `npm run test`      | Executa unit tests          |
+| `npm run test:cov`  | Executa tests com coverage  |
+| `npm run test:e2e`  | Executa testes end-to-end   |
+| `npm run lint`      | Executa ESLint              |
+| `npm run format`    | Formata código com Prettier |
+
+## ⚠️ Notas Importantes
+
+1. **Sincronização de Schema:** O TypeORM está configurado com `synchronize: true` para desenvolvimento. **Em produção, use migrações!**
+
+2. **Autenticação Obrigatória:** Todos os endpoints (exceto `/health`) requerem Bearer token válido do OAuth service.
+
+3. **Variáveis de Ambiente:** Copie `.env.example` para `.env` e ajuste conforme seu ambiente.
+
+4. **OAuth Service:** Certifique-se de que o OAuth service esteja rodando em `http://{OAUTH_INTERNAL_HOST}:{OAUTH_INTERNAL_API_PORT}` antes de iniciar esta aplicação.
+
+## 📞 Contato e Suporte
+
+Para questões sobre o NestJS framework:
+
+- [Documentação NestJS](https://docs.nestjs.com)
+- [Discord](https://discord.gg/G7Qnnhy)
+
+## 📄 Licença
+
+Este projeto utiliza o framework NestJS que é [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
