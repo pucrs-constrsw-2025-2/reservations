@@ -42,7 +42,6 @@ export class AuthGuard implements CanActivate {
       })
       .pipe(
         map((response) => {
-          console.log(response)
           if (response.status === HttpStatus.OK && response.data) {
             // Store user information in request for later use
             request['user'] = response.data;

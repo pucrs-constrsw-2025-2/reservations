@@ -14,7 +14,7 @@ describe('AuthGuard', () => {
   let mockRequest: any;
 
   const mockHttpService = {
-    get: jest.fn(),
+    post: jest.fn(),
   };
 
   const mockConfigService = {
@@ -57,11 +57,9 @@ describe('AuthGuard', () => {
     mockConfigService.get.mockImplementation((key: string) => {
       switch (key) {
         case 'OAUTH_INTERNAL_HOST':
-          return 'http://localhost';
-        case 'OAUTH_INTERNAL_PORT':
-          return '3000';
-        case 'OAUTH_ME_ENDPOINT':
-          return 'me';
+          return 'oauth';
+        case 'OAUTH_INTERNAL_API_PORT':
+          return '8000';
         default:
           return undefined;
       }
@@ -77,180 +75,114 @@ describe('AuthGuard', () => {
   });
 
   describe('canActivate', () => {
-    it('should return true (auth is currently bypassed)', () => {
-      // The current implementation has "return true;" at the beginning
-      // This bypasses all authentication logic for development/testing
-      mockRequest.headers.authorization = 'Bearer valid-token';
-
-      const result = guard.canActivate(mockExecutionContext);
-
-      expect(result).toBe(true);
-    });
-
-    it('should return true even without authorization header (bypassed)', () => {
-      // Since auth is bypassed, it should return true even without token
+    it('should throw UnauthorizedException when no authorization header', () => {
       mockRequest.headers = {};
-
-      const result = guard.canActivate(mockExecutionContext);
-
-      expect(result).toBe(true);
+      expect(() => guard.canActivate(mockExecutionContext))
+        .toThrow(UnauthorizedException);
     });
 
-    it('should return true with any kind of authorization header (bypassed)', () => {
-      // Since auth is bypassed, any header works
-      mockRequest.headers.authorization = 'Basic some-token';
-
-      const result = guard.canActivate(mockExecutionContext);
-
-      expect(result).toBe(true);
+    it('should throw UnauthorizedException when authorization header is not Bearer', () => {
+      mockRequest.headers.authorization = 'Basic token123';
+      expect(() => guard.canActivate(mockExecutionContext))
+        .toThrow(UnauthorizedException);
     });
 
-    it('should return true with empty Bearer token (bypassed)', () => {
-      // Since auth is bypassed, empty token works
-      mockRequest.headers.authorization = 'Bearer ';
-
-      const result = guard.canActivate(mockExecutionContext);
-
-      expect(result).toBe(true);
+    it('should throw UnauthorizedException when Bearer token is empty', () => {
+      mockRequest.headers.authorization = '';
+      expect(() => guard.canActivate(mockExecutionContext))
+        .toThrow(UnauthorizedException);
     });
 
-    it('should not call HttpService when auth is bypassed', () => {
-      mockRequest.headers.authorization = 'Bearer valid-token';
-
-      guard.canActivate(mockExecutionContext);
-
-      // Since auth is bypassed with immediate "return true", 
-      // the httpService should never be called
-      expect(httpService.get).not.toHaveBeenCalled();
-    });
-
-    it('should not validate token with OAuth when auth is bypassed', () => {
-      mockRequest.headers.authorization = 'Bearer some-token';
-
-      const result = guard.canActivate(mockExecutionContext);
-
-      expect(result).toBe(true);
-      expect(httpService.get).not.toHaveBeenCalled();
-      expect(configService.get).not.toHaveBeenCalled();
-    });
-
-    it('should return true for any execution context (bypassed)', () => {
-      // Test with different scenarios
-      const scenarios = [
-        { headers: { authorization: 'Bearer token' } },
-        { headers: {} },
-        { headers: { authorization: 'Invalid' } },
-      ];
-
-      scenarios.forEach(scenario => {
-        mockRequest.headers = scenario.headers;
-        const result = guard.canActivate(mockExecutionContext);
-        expect(result).toBe(true);
-      });
-    });
-
-  it.skip('should validate token when AUTH_BYPASS=false and set user on success', async () => {
-      process.env.AUTH_BYPASS = 'false';
-      mockRequest.headers.authorization = 'Bearer tok';
-      const resp = { status: HttpStatus.OK, data: { id: 'u1' } } as any;
+    it('should validate token with OAuth gateway and store user data', async () => {
+      const token = 'valid-token-123';
+      const userData = { id: 'user123', name: 'Test User' };
+      mockRequest.headers.authorization = `Bearer ${token}`;
+      
       mockConfigService.get.mockImplementation((key: string) => {
-        if (key === 'OAUTH_INTERNAL_HOST') return 'http://host';
-        if (key === 'OAUTH_INTERNAL_PORT') return '3000';
-        if (key === 'OAUTH_ME_ENDPOINT') return 'me';
-        return undefined;
+        switch (key) {
+          case 'OAUTH_INTERNAL_HOST':
+            return 'oauth';
+          case 'OAUTH_INTERNAL_API_PORT':
+            return '8000';
+          default:
+            return undefined;
+        }
       });
-      (httpService.get as jest.Mock).mockReturnValue(of(resp));
 
-  const result = guard.canActivate(mockExecutionContext) as any;
-  const ok = await lastValueFrom(result);
-      expect(ok).toBe(true);
-      expect(mockRequest.user).toEqual({ id: 'u1' });
+      (httpService.post as jest.Mock).mockReturnValue(
+        of({ status: HttpStatus.OK, data: userData })
+      );
+
+      const result = guard.canActivate(mockExecutionContext) as any;
+      const isAllowed = await lastValueFrom(result);
+
+      expect(isAllowed).toBe(true);
+      expect(mockRequest.user).toEqual(userData);
+      expect(httpService.post).toHaveBeenCalledWith(
+        'http://oauth:8000/validate',
+        {},
+        expect.objectContaining({
+          headers: { Authorization: `Bearer ${token}`, accept: "application/json" }
+        })
+      );
     });
 
-  it.skip('should throw when AUTH_BYPASS=false and header missing', () => {
-      process.env.AUTH_BYPASS = 'false';
-      mockRequest.headers = {};
-      expect(() => guard.canActivate(mockExecutionContext)).toThrow(UnauthorizedException);
-    });
+    it('should throw UnauthorizedException when OAuth validation fails', async () => {
+      mockRequest.headers.authorization = 'Bearer invalid-token';
 
-  it.skip('should throw when AUTH_BYPASS=false and token empty', () => {
-      process.env.AUTH_BYPASS = 'false';
-      mockRequest.headers.authorization = 'Bearer ';
-      expect(() => guard.canActivate(mockExecutionContext)).toThrow(UnauthorizedException);
-    });
-
-  it.skip('should throw when AUTH_BYPASS=false and config missing', () => {
-      process.env.AUTH_BYPASS = 'false';
-      mockRequest.headers.authorization = 'Bearer tok';
-      mockConfigService.get.mockReturnValue(undefined);
-      expect(() => guard.canActivate(mockExecutionContext)).toThrow(UnauthorizedException);
-    });
-
-  it.skip('should return false when upstream returns 200 without data', async () => {
-      process.env.AUTH_BYPASS = 'false';
-      mockRequest.headers.authorization = 'Bearer tok';
       mockConfigService.get.mockImplementation((key: string) => {
-        if (key === 'OAUTH_INTERNAL_HOST') return 'http://host';
-        if (key === 'OAUTH_INTERNAL_PORT') return '3000';
-        if (key === 'OAUTH_ME_ENDPOINT') return 'me';
-        return undefined;
+        switch (key) {
+          case 'OAUTH_INTERNAL_HOST':
+            return 'oauth';
+          case 'OAUTH_INTERNAL_API_PORT':
+            return '8000';
+          default:
+            return undefined;
+        }
       });
-      (httpService.get as jest.Mock).mockReturnValue(of({ status: HttpStatus.OK, data: null }));
-  const result = guard.canActivate(mockExecutionContext) as any;
-  const ok = await lastValueFrom(result);
-      expect(ok).toBe(false);
+
+      (httpService.post as jest.Mock).mockReturnValue(
+        throwError(() => new Error('Token validation failed'))
+      );
+
+      const result = guard.canActivate(mockExecutionContext) as any;
+      await expect(lastValueFrom(result)).rejects
+        .toThrow(UnauthorizedException);
     });
 
-  it.skip('should throw Unauthorized on upstream error', async () => {
-      process.env.AUTH_BYPASS = 'false';
-      mockRequest.headers.authorization = 'Bearer tok';
+    it('should return false when OAuth returns 200 but no user data', async () => {
+      mockRequest.headers.authorization = 'Bearer token123';
+      
       mockConfigService.get.mockImplementation((key: string) => {
-        if (key === 'OAUTH_INTERNAL_HOST') return 'http://host';
-        if (key === 'OAUTH_INTERNAL_PORT') return '3000';
-        if (key === 'OAUTH_ME_ENDPOINT') return 'me';
-        return undefined;
+        switch (key) {
+          case 'OAUTH_INTERNAL_HOST':
+            return 'oauth';
+          case 'OAUTH_INTERNAL_API_PORT':
+            return '8000';
+          default:
+            return undefined;
+        }
       });
-      (httpService.get as jest.Mock).mockReturnValue(throwError(() => new Error('bad')));
-  const result = guard.canActivate(mockExecutionContext) as any;
-  await expect(lastValueFrom(result)).rejects.toBeInstanceOf(UnauthorizedException);
+
+      (httpService.post as jest.Mock).mockReturnValue(
+        of({ status: HttpStatus.OK, data: null })
+      );
+
+      const result = guard.canActivate(mockExecutionContext) as any;
+      const isAllowed = await lastValueFrom(result);
+
+      expect(isAllowed).toBe(false);
+      expect(mockRequest.user).toBeUndefined();
     });
   });
 
-  describe('Auth Implementation (currently disabled)', () => {
-    // These tests document the intended behavior when auth is enabled
-    // When the "return true;" line is removed from the guard
-
-    it('should have proper config keys defined for OAuth', () => {
-      // Test that config service is set up correctly
-      expect(configService.get('OAUTH_INTERNAL_HOST')).toBe('http://localhost');
-      expect(configService.get('OAUTH_INTERNAL_PORT')).toBe('3000');
-      expect(configService.get('OAUTH_ME_ENDPOINT')).toBe('me');
-    });
-
-    it('should be ready to validate tokens when auth is enabled', () => {
-      // The guard has all the necessary dependencies injected
+  describe('Guard Configuration', () => {
+    it('should be properly configured with dependencies', () => {
+      expect(guard).toHaveProperty('canActivate');
       expect(guard['httpService']).toBeDefined();
       expect(guard['configService']).toBeDefined();
-    });
-
-    it('should have the proper structure for token validation', () => {
-      // Verify the guard has access to required services
-      expect(httpService).toBeDefined();
-      expect(configService).toBeDefined();
-      expect(guard).toHaveProperty('canActivate');
-    });
-  });
-
-  describe('Guard Metadata', () => {
-    it('should be a valid CanActivate guard', () => {
-      // Ensure the guard implements the required interface
-      expect(typeof guard.canActivate).toBe('function');
-    });
-
-    it('should accept ExecutionContext as parameter', () => {
-      // Verify canActivate accepts the correct parameter
-      const result = guard.canActivate(mockExecutionContext);
-      expect(result).toBeDefined();
+      expect(configService.get('OAUTH_INTERNAL_HOST')).toBe('oauth');
+      expect(configService.get('OAUTH_INTERNAL_API_PORT')).toBe('8000');
     });
   });
 });
