@@ -15,13 +15,14 @@ export class AuthorizedUserService {
   ) {}
 
   async addToReservation(reservationId: string, createAuthorizedUserDto: CreateAuthorizedUserDto) {
-    const reservation = await this.reservationRepo.findOne({ where: { reservation_id: reservationId } });
+    const reservation = await this.reservationRepo.findOne({ where: { reservation_id: reservationId, deleted: false } });
     if (!reservation) {
       throw new NotFoundException(`Reserva com ID ${reservationId} não encontrada`);
     }
 
     const authorizedUser = this.authorizedUserRepo.create({
       ...createAuthorizedUserDto,
+      deleted: false,
       reservation,
     });
 
@@ -29,13 +30,13 @@ export class AuthorizedUserService {
   }
 
   async findByReservation(reservationId: string) {
-    const reservation = await this.reservationRepo.findOne({ where: { reservation_id: reservationId } });
+    const reservation = await this.reservationRepo.findOne({ where: { reservation_id: reservationId, deleted: false } });
     if (!reservation) {
       throw new NotFoundException(`Reserva com ID ${reservationId} não encontrada`);
     }
 
     return await this.authorizedUserRepo.find({
-      where: { reservation: { reservation_id: reservationId } },
+      where: { reservation: { reservation_id: reservationId }, deleted: false },
     });
   }
 
@@ -43,7 +44,8 @@ export class AuthorizedUserService {
     const authorizedUser = await this.authorizedUserRepo.findOne({
       where: { 
         authorized_user_id: userId,
-        reservation: { reservation_id: reservationId }
+        reservation: { reservation_id: reservationId, deleted: false },
+        deleted: false,
       },
       relations: ['reservation'],
     });
@@ -71,6 +73,8 @@ export class AuthorizedUserService {
 
   async remove(reservationId: string, userId: string) {
     const authorizedUser = await this.findOne(reservationId, userId);
-    return await this.authorizedUserRepo.remove(authorizedUser);
+    authorizedUser.deleted = true;
+    await this.authorizedUserRepo.save(authorizedUser);
+    return { message: 'Usuário autorizado removido' };
   }
 }

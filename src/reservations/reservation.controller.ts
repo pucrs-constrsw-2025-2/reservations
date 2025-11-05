@@ -35,6 +35,7 @@ export class ReservationController {
   @ApiQuery({ name: 'details', required: false, description: 'Filtrar por detalhes (ex: details={like}%reuniao%)' })
   @ApiQuery({ name: 'resource_id', required: false, description: 'Filtrar por ID do recurso (ex: resource_id=uuid)' })
   @ApiQuery({ name: 'lesson_id', required: false, description: 'Filtrar por ID da aula (ex: lesson_id=uuid)' })
+  @ApiQuery({ name: 'deleted', required: false, description: 'Filtrar por flag de deleção lógica (ex: deleted=true ou deleted={neq}true). Padrão é false.' })
   findAll(@Query() query: QueryReservationDto) {
     return this.reservationService.findAll(query);
   }

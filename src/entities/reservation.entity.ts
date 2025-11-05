@@ -23,4 +23,7 @@ export class Reservation {
 
   @Column({ type: 'uuid', nullable: true })
   lesson_id?: string;
+
+  @Column({ type: 'boolean', default: false })
+  deleted: boolean;
 }

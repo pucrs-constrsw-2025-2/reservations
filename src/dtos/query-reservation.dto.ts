@@ -40,4 +40,9 @@ export class QueryReservationDto {
     description: 'Lesson ID filter with optional operator (ex: lesson_id=uuid)' 
   })
   lesson_id?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by logical deletion flag: deleted=true or deleted={neq}true (default is deleted=false)'
+  })
+  deleted?: string;
 }

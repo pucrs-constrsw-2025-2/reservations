@@ -14,4 +14,7 @@ export class AuthorizedUser {
 
   @ManyToOne(() => Reservation, (reservation) => reservation.authorizedUsers, { onDelete: 'CASCADE' })
   reservation: Reservation;
+
+  @Column({ type: 'boolean', default: false })
+  deleted: boolean;
 }

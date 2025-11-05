@@ -20,6 +20,7 @@ export class ReservationService {
   async create(createReservationDto: CreateReservationDto) {
     const reservation = this.reservationRepo.create({
       ...createReservationDto,
+      deleted: false,
       authorizedUsers: createReservationDto.authorizedUsers?.map((au) => this.authorizedUserRepo.create(au)),
     });
     await this.reservationRepo.save(reservation);
@@ -67,6 +68,11 @@ export class ReservationService {
       }
     }
 
+    // Default: only active (not deleted) unless explicitly filtered
+    if (typeof (query as any).deleted === 'undefined') {
+      (where as any).deleted = false;
+    }
+
     return this.reservationRepo.find({ 
       where,
       relations: ['authorizedUsers'] // Include related entities if needed
@@ -74,31 +80,38 @@ export class ReservationService {
   }
 
   async findOne(id: string) {
-    const reservation = await this.reservationRepo.findOne({ where: { reservation_id: id } });
+    const reservation = await this.reservationRepo.findOne({ where: { reservation_id: id, deleted: false } });
     if (!reservation) throw new NotFoundException('Reserva não encontrada');
     return reservation;
   }
 
   async update(id: string, updateReservationDto: UpdateReservationDto) {
-    const reservation = await this.reservationRepo.findOne({ where: { reservation_id: id } });
+    const reservation = await this.reservationRepo.findOne({ where: { reservation_id: id, deleted: false } });
     if (!reservation) throw new NotFoundException('Reserva não encontrada');
     Object.assign(reservation, updateReservationDto);
+    if (typeof (reservation as any).deleted === 'undefined') {
+      (reservation as any).deleted = false;
+    }
     await this.reservationRepo.save(reservation);
     return reservation;
   }
 
   async patch(id: string, patchReservationDto: PatchReservationDto) {
-    const reservation = await this.reservationRepo.findOne({ where: { reservation_id: id } });
+    const reservation = await this.reservationRepo.findOne({ where: { reservation_id: id, deleted: false } });
     if (!reservation) throw new NotFoundException('Reserva não encontrada');
     Object.assign(reservation, patchReservationDto);
+    if (typeof (reservation as any).deleted === 'undefined') {
+      (reservation as any).deleted = false;
+    }
     await this.reservationRepo.save(reservation);
     return reservation;
   }
 
   async remove(id: string) {
-    const reservation = await this.reservationRepo.findOne({ where: { reservation_id: id } });
+    const reservation = await this.reservationRepo.findOne({ where: { reservation_id: id, deleted: false } });
     if (!reservation) throw new NotFoundException('Reserva não encontrada');
-    await this.reservationRepo.remove(reservation);
+    reservation.deleted = true;
+    await this.reservationRepo.save(reservation);
     return { message: 'Reserva removida' };
   }
 
@@ -107,6 +120,8 @@ export class ReservationService {
       case 'initial_date':
       case 'end_date':
         return new Date(value);
+      case 'deleted':
+        return String(value).toLowerCase() === 'true';
       case 'reservation_id':
       case 'resource_id':
       case 'lesson_id':

@@ -4,7 +4,7 @@
 
 ## Descrição
 
-API RESTful para gerenciamento de reservas de recursos vinculados a aulas. Suporta operações CRUD completas com validação de dados, autenticação via OAuth (Keycloak Gateway) e consultas avançadas com operadores personalizados.
+API RESTful para gerenciamento de reservas de recursos vinculados a aulas. Suporta operações CRUD completas com validação de dados, autenticação via OAuth (Keycloak Gateway) e consultas avançadas com operadores personalizados. Deleção é lógica (soft delete).
 
 ## 🔐 Autenticação
 
@@ -114,18 +114,20 @@ Todos os endpoints abaixo requerem autenticação via Bearer token:
 | `GET`    | `/reservation/:id` | Buscar reserva por ID                     |
 | `PUT`    | `/reservation/:id` | Atualizar reserva (substituição completa) |
 | `PATCH`  | `/reservation/:id` | Atualizar reserva (parcial)               |
-| `DELETE` | `/reservation/:id` | Remover reserva                           |
+| `DELETE` | `/reservation/:id` | Remover reserva (deleção lógica)          |
 
-### Authorized Users
+### Authorized Users (por reserva)
 
-| Método   | Endpoint               | Descrição                     |
-| -------- | ---------------------- | ----------------------------- |
-| `POST`   | `/authorized-user`     | Criar novo usuário autorizado |
-| `GET`    | `/authorized-user`     | Listar usuários autorizados   |
-| `GET`    | `/authorized-user/:id` | Buscar usuário por ID         |
-| `PUT`    | `/authorized-user/:id` | Atualizar usuário             |
-| `PATCH`  | `/authorized-user/:id` | Atualizar usuário (parcial)   |
-| `DELETE` | `/authorized-user/:id` | Remover usuário               |
+Todos os endpoints são aninhados à reserva:
+
+| Método   | Endpoint                                            | Descrição                                    |
+| -------- | --------------------------------------------------- | -------------------------------------------- |
+| `POST`   | `/reservations/:reservationId/authorized-users`     | Adicionar usuário autorizado à reserva       |
+| `GET`    | `/reservations/:reservationId/authorized-users`     | Listar usuários autorizados (somente ativos) |
+| `GET`    | `/reservations/:reservationId/authorized-users/:id` | Buscar usuário autorizado por ID             |
+| `PUT`    | `/reservations/:reservationId/authorized-users/:id` | Atualizar usuário autorizado                 |
+| `PATCH`  | `/reservations/:reservationId/authorized-users/:id` | Atualizar parcialmente usuário autorizado    |
+| `DELETE` | `/reservations/:reservationId/authorized-users/:id` | Remover usuário autorizado (deleção lógica)  |
 
 ## 🔍 Query Operators
 
@@ -142,6 +144,17 @@ O endpoint `GET /reservation` suporta filtros avançados:
 | **Less Than**             | `field={lt}value`       | Menor que                        | `end_date={lt}2025-12-31`       |
 | **Less Than or Equal**    | `field={lteq}value`     | Menor ou igual                   | `end_date={lteq}2025-12-31`     |
 | **Like**                  | `field={like}%pattern%` | Busca parcial (case-insensitive) | `details={like}%reunião%`       |
+
+Além disso, você pode filtrar pela flag de deleção lógica:
+
+| Campo     | Sintaxe                       | Descrição                                | Exemplo        |
+| --------- | ----------------------------- | ---------------------------------------- | -------------- |
+| `deleted` | `deleted=true` ou `{neq}true` | Filtrar registros deletados logicamente. | `deleted=true` |
+
+Observações:
+
+- Por padrão, o endpoint de listagem retorna somente registros com `deleted=false`.
+- Para negar, use `deleted={neq}true` (ou `deleted=false`).
 
 ### Exemplos de Query
 
@@ -160,6 +173,9 @@ GET /reservation?details={like}%reunião%
 
 # Combinar múltiplos filtros
 GET /reservation?resource_id=abc-123&initial_date={gteq}2025-10-19&details={like}%sala%
+
+# Incluir registros deletados
+GET /reservation?deleted=true
 ```
 
 ## 🧪 Testes

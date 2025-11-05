@@ -61,6 +61,7 @@ describe('ReservationService', () => {
       expect(authorizedUserRepo.create).toHaveBeenCalledTimes(2);
       expect(reservationRepo.create).toHaveBeenCalledWith({
         ...dto,
+        deleted: false,
         authorizedUsers: dto.authorizedUsers,
       });
       expect(reservationRepo.save).toHaveBeenCalledWith(created);
@@ -111,8 +112,8 @@ describe('ReservationService', () => {
     it('ignores empty values', async () => {
       reservationRepo.find.mockResolvedValue([{ reservation_id: 'i' }] as any);
       const result = await service.findAll({ details: '', initial_date: undefined } as any);
-  const where = (reservationRepo.find as jest.Mock).mock.calls[0][0].where;
-      expect(where).toEqual({});
+      const where = (reservationRepo.find as jest.Mock).mock.calls[0][0].where;
+      expect(where).toEqual({ deleted: false });
       expect(result).toHaveLength(1);
     });
   });
@@ -122,7 +123,7 @@ describe('ReservationService', () => {
       const entity = { reservation_id: 'i' } as Reservation;
       reservationRepo.findOne.mockResolvedValue(entity);
       const result = await service.findOne('i');
-      expect(reservationRepo.findOne).toHaveBeenCalledWith({ where: { reservation_id: 'i' } });
+      expect(reservationRepo.findOne).toHaveBeenCalledWith({ where: { reservation_id: 'i', deleted: false } });
       expect(result).toBe(entity);
     });
 
@@ -167,12 +168,13 @@ describe('ReservationService', () => {
   });
 
   describe('remove', () => {
-    it('removes and returns message', async () => {
-      const entity: any = { reservation_id: 'i' };
+    it('removes and returns message (soft delete)', async () => {
+      const entity: any = { reservation_id: 'i', deleted: false };
       reservationRepo.findOne.mockResolvedValue(entity);
-      reservationRepo.remove.mockResolvedValue(entity);
+      reservationRepo.save.mockResolvedValue({ ...entity, deleted: true });
       const result = await service.remove('i');
-      expect(reservationRepo.remove).toHaveBeenCalledWith(entity);
+      expect(entity.deleted).toBe(true);
+      expect(reservationRepo.save).toHaveBeenCalledWith(entity);
       expect(result).toEqual({ message: 'Reserva removida' });
     });
 
