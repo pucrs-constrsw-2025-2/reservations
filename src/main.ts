@@ -1,3 +1,4 @@
+import './instrumentation';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -23,6 +24,11 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
+
+  // Prefixo global de API (excluindo /health)
+  app.setGlobalPrefix('api/v1', {
+    exclude: ['health'],
+  });
 
   await app.listen(process.env.PORT ?? 8080);
 }

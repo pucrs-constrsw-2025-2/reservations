@@ -2,7 +2,8 @@ FROM node:20-alpine
 WORKDIR /usr/src/app
 RUN apk add --no-cache curl
 COPY package*.json ./
-RUN npm ci
+RUN npm install --package-lock-only || true
+RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 COPY . .
 RUN npm run build
 EXPOSE 8080

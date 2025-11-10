@@ -1,33 +1,49 @@
 import { Controller, Get } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { HealthCheckService, TypeOrmHealthIndicator, HealthCheck } from '@nestjs/terminus';
 
-@ApiTags('Health')
-@Controller('health')
+@Controller()
 export class HealthController {
-  @Get()
-  @ApiOperation({ summary: 'Verificar status da API' })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'API está funcionando normalmente.',
-    schema: {
-      type: 'object',
-      properties: {
-        status: {
-          type: 'string',
-          example: 'ok'
-        },
-        timestamp: {
-          type: 'string',
-          format: 'date-time',
-          example: '2025-10-19T10:00:00Z'
-        }
-      }
-    }
-  })
+  constructor(
+    private health: HealthCheckService,
+    private db: TypeOrmHealthIndicator,
+  ) {}
+
+  @Get('health')
+  @HealthCheck()
   check() {
-    return {
-      status: 'ok',
-      timestamp: new Date().toISOString()
-    };
+    return this.health.check([
+      () => this.db.pingCheck('postgresql'),
+    ]).then(result => {
+      // Padronizar formato de resposta para compatibilidade com Actuator
+      const standardized = {
+        status: result.status === 'ok' ? 'UP' : 'DOWN',
+        components: {} as Record<string, any>
+      };
+      
+      // Converter info para components
+      if (result.info && typeof result.info === 'object') {
+        Object.keys(result.info).forEach(key => {
+          const infoValue = result.info![key];
+          if (infoValue && typeof infoValue === 'object' && 'status' in infoValue) {
+            standardized.components[key] = {
+              status: infoValue.status === 'up' ? 'UP' : 'DOWN'
+            };
+          }
+        });
+      }
+      
+      // Converter error para components com status DOWN
+      if (result.error && typeof result.error === 'object') {
+        Object.keys(result.error).forEach(key => {
+          standardized.components[key] = {
+            status: 'DOWN',
+            details: result.error![key]
+          };
+        });
+      }
+      
+      return standardized;
+    });
   }
 }
+
