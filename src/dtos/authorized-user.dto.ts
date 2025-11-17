@@ -1,4 +1,4 @@
-import { IsString, MaxLength, IsOptional } from 'class-validator';
+import { IsString, MaxLength, IsOptional, IsUUID } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class AuthorizedUserDto {
@@ -15,6 +15,7 @@ export class AuthorizedUserDto {
 export class CreateAuthorizedUserDto {
   @ApiProperty({ type: 'string', format: 'uuid', description: 'Identificador do usuário autorizado' })
   @IsString()
+  @IsUUID()
   user_id: string;
 
   @ApiProperty({ type: 'string', maxLength: 100, description: 'Nome do usuário autorizado' })

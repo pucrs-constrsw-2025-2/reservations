@@ -29,7 +29,7 @@ export class ReservationService {
 
   async findAll(query: QueryReservationDto) {
     const where: FindOptionsWhere<Reservation> = {};
-    
+
     for (const [key, value] of Object.entries(query as Record<string, string>)) {
       if (!value) continue;
 
@@ -116,20 +116,21 @@ export class ReservationService {
   }
 
   private parseValue(key: string, value: string) {
-    switch (key) {
-      case 'initial_date':
-      case 'end_date':
-        return new Date(value);
-      case 'deleted':
-        return String(value).toLowerCase() === 'true';
-      case 'reservation_id':
-      case 'resource_id':
-      case 'lesson_id':
-        return value; // Keep as string for UUIDs
-      case 'details':
-        return value; // Keep as string for text fields
-      default:
-        return value;
-    }
+  switch (key) {
+    case 'initial_date':
+    case 'end_date':
+      return value; // FIX: return as string for date-only comparisons
+    case 'deleted':
+      return String(value).toLowerCase() === 'true';
+    case 'reservation_id':
+    case 'resource_id':
+    case 'lesson_id':
+      return value; 
+    case 'details':
+      return value;
+    default:
+      return value;
   }
+}
+
 }

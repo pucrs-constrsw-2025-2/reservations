@@ -1,12 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { ExecutionContext, INestApplication, UnauthorizedException, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { AppModule } from './../src/app.module';
+import { AppModule } from '../src/app.module';
 import { Repository } from 'typeorm';
-import { Reservation } from './../src/entities/reservation.entity';
-import { AuthorizedUser } from './../src/entities/authorized-user.entity';
+import { Reservation } from '../src/entities/reservation.entity';
+import { AuthorizedUser } from '../src/entities/authorized-user.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { AuthGuard } from '../src/guards/auth.guard';
+import { Request } from 'express';
 
 describe('Reservations API (e2e)', () => {
   let app: INestApplication<App>;
@@ -17,18 +19,37 @@ describe('Reservations API (e2e)', () => {
   const mockAuthToken = 'mock-jwt-token';
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+  const moduleFixture: TestingModule = await Test.createTestingModule({
+    imports: [AppModule],
+  })
+    .overrideGuard(AuthGuard)
+    .useValue({
+      canActivate: (ctx) => {
+    const req = ctx.switchToHttp().getRequest();
+    const auth = req.headers['authorization'];
 
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-    
-    reservationRepo = moduleFixture.get<Repository<Reservation>>(getRepositoryToken(Reservation));
-    authorizedUserRepo = moduleFixture.get<Repository<AuthorizedUser>>(getRepositoryToken(AuthorizedUser));
-    
-    await app.init();
-  });
+    if (!auth) {
+      throw new UnauthorizedException();
+    }
+
+    return true;
+  },
+    })
+    .compile();
+
+  app = moduleFixture.createNestApplication();
+app.useGlobalPipes(
+  new ValidationPipe({
+    whitelist: true,
+    transform: true,
+    transformOptions: { enableImplicitConversion: true },
+  }),
+);
+  await app.init();
+
+  reservationRepo = moduleFixture.get<Repository<Reservation>>(getRepositoryToken(Reservation));
+  authorizedUserRepo = moduleFixture.get<Repository<AuthorizedUser>>(getRepositoryToken(AuthorizedUser));
+});
 
   afterAll(async () => {
     // Clean up test data

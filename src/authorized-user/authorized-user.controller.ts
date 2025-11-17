@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Delete, Param, Body, UseGuards, ParseUUIDPipe } from '@nestjs/common';
 import { AuthorizedUserService } from './authorized-user.service';
 import { CreateAuthorizedUserDto, UpdateAuthorizedUserDto, PatchAuthorizedUserDto } from '../dtos/authorized-user.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
@@ -20,7 +20,7 @@ export class AuthorizedUserController {
   @ApiResponse({ status: 403, description: 'Acesso negado. Usuário não possui permissão para esta operação.' })
   @ApiResponse({ status: 404, description: 'Reserva não encontrada.' })
   create(
-    @Param('reservationId') reservationId: string,
+    @Param('reservationId', new ParseUUIDPipe()) reservationId: string,
     @Body() createAuthorizedUserDto: CreateAuthorizedUserDto
   ) {
     return this.authorizedUserService.addToReservation(reservationId, createAuthorizedUserDto);
@@ -33,7 +33,7 @@ export class AuthorizedUserController {
   @ApiResponse({ status: 401, description: 'Token de autenticação ausente, inválido ou expirado.' })
   @ApiResponse({ status: 403, description: 'Acesso negado. Usuário não possui permissão para esta operação.' })
   @ApiResponse({ status: 404, description: 'Reserva não encontrada.' })
-  findAll(@Param('reservationId') reservationId: string) {
+  findAll(@Param('reservationId', new ParseUUIDPipe()) reservationId: string) {
     return this.authorizedUserService.findByReservation(reservationId);
   }
 
@@ -46,8 +46,8 @@ export class AuthorizedUserController {
   @ApiResponse({ status: 403, description: 'Acesso negado. Usuário não possui permissão para esta operação.' })
   @ApiResponse({ status: 404, description: 'Usuário autorizado ou reserva não encontrada.' })
   findOne(
-    @Param('reservationId') reservationId: string,
-    @Param('id') id: string
+    @Param('reservationId', new ParseUUIDPipe()) reservationId: string,
+    @Param('id', new ParseUUIDPipe()) id: string
   ) {
     return this.authorizedUserService.findOne(reservationId, id);
   }
@@ -62,8 +62,8 @@ export class AuthorizedUserController {
   @ApiResponse({ status: 403, description: 'Acesso negado. Usuário não possui permissão para esta operação.' })
   @ApiResponse({ status: 404, description: 'Usuário autorizado ou reserva não encontrada.' })
   update(
-    @Param('reservationId') reservationId: string,
-    @Param('id') id: string,
+    @Param('reservationId', new ParseUUIDPipe()) reservationId: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() updateAuthorizedUserDto: UpdateAuthorizedUserDto
   ) {
     return this.authorizedUserService.update(reservationId, id, updateAuthorizedUserDto);
@@ -79,8 +79,8 @@ export class AuthorizedUserController {
   @ApiResponse({ status: 403, description: 'Acesso negado. Usuário não possui permissão para esta operação.' })
   @ApiResponse({ status: 404, description: 'Usuário autorizado ou reserva não encontrada.' })
   patch(
-    @Param('reservationId') reservationId: string,
-    @Param('id') id: string,
+    @Param('reservationId', new ParseUUIDPipe()) reservationId: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() patchAuthorizedUserDto: PatchAuthorizedUserDto
   ) {
     return this.authorizedUserService.patch(reservationId, id, patchAuthorizedUserDto);
@@ -95,8 +95,8 @@ export class AuthorizedUserController {
   @ApiResponse({ status: 403, description: 'Acesso negado. Usuário não possui permissão para esta operação.' })
   @ApiResponse({ status: 404, description: 'Usuário autorizado ou reserva não encontrada.' })
   remove(
-    @Param('reservationId') reservationId: string,
-    @Param('id') id: string
+    @Param('reservationId', new ParseUUIDPipe()) reservationId: string,
+    @Param('id', new ParseUUIDPipe()) id: string
   ) {
     return this.authorizedUserService.remove(reservationId, id);
   }
