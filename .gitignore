@@ -3,6 +3,10 @@
 /node_modules
 /build
 
+.env.test
+coverage/
+*.lcov
+
 # Logs
 logs
 *.log
