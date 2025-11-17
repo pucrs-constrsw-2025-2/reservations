@@ -19,37 +19,37 @@ describe('Reservations API (e2e)', () => {
   const mockAuthToken = 'mock-jwt-token';
 
   beforeAll(async () => {
-  const moduleFixture: TestingModule = await Test.createTestingModule({
-    imports: [AppModule],
-  })
-    .overrideGuard(AuthGuard)
-    .useValue({
-      canActivate: (ctx) => {
-    const req = ctx.switchToHttp().getRequest();
-    const auth = req.headers['authorization'];
-
-    if (!auth) {
-      throw new UnauthorizedException();
-    }
-
-    return true;
-  },
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
     })
-    .compile();
+      .overrideGuard(AuthGuard)
+      .useValue({
+        canActivate: (ctx) => {
+          const req = ctx.switchToHttp().getRequest();
+          const auth = req.headers['authorization'];
 
-  app = moduleFixture.createNestApplication();
-app.useGlobalPipes(
-  new ValidationPipe({
-    whitelist: true,
-    transform: true,
-    transformOptions: { enableImplicitConversion: true },
-  }),
-);
-  await app.init();
+          if (!auth) {
+            throw new UnauthorizedException();
+          }
 
-  reservationRepo = moduleFixture.get<Repository<Reservation>>(getRepositoryToken(Reservation));
-  authorizedUserRepo = moduleFixture.get<Repository<AuthorizedUser>>(getRepositoryToken(AuthorizedUser));
-});
+          return true;
+        },
+      })
+      .compile();
+
+    app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        transform: true,
+        transformOptions: { enableImplicitConversion: true },
+      }),
+    );
+    await app.init();
+
+    reservationRepo = moduleFixture.get<Repository<Reservation>>(getRepositoryToken(Reservation));
+    authorizedUserRepo = moduleFixture.get<Repository<AuthorizedUser>>(getRepositoryToken(AuthorizedUser));
+  });
 
   afterAll(async () => {
     // Clean up test data
@@ -83,6 +83,22 @@ app.useGlobalPipes(
           expect(response.body.lesson_id).toBe(createDto.lesson_id);
           createdReservationId = response.body.reservation_id;
         });
+    });
+
+    it('should default deleted to false on create', async () => {
+      const dto = {
+        initial_date: '2025-11-01',
+        end_date: '2025-11-02',
+        resource_id: '123e4567-e89b-12d3-a456-426614178888',
+      };
+
+      const res = await request(app.getHttpServer())
+        .post('/reservation')
+        .set('Authorization', `Bearer ${mockAuthToken}`)
+        .send(dto)
+        .expect(201);
+
+      expect(res.body.deleted).toBe(false);
     });
 
     it('should create a new reservation with authorized users', () => {
@@ -172,6 +188,22 @@ app.useGlobalPipes(
         });
     });
 
+    it('should filter using {gt} operator', async () => {
+      await request(app.getHttpServer())
+        .get('/reservation?initial_date={gt}2025-01-01')
+        .set('Authorization', `Bearer ${mockAuthToken}`)
+        .expect(200);
+    });
+
+    it('should return deleted reservations when deleted=true is explicitly passed', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/reservation?deleted=true')
+        .set('Authorization', `Bearer ${mockAuthToken}`)
+        .expect(200);
+
+      expect(Array.isArray(res.body)).toBe(true);
+    });
+
     it('should filter reservations by initial_date with gteq operator', () => {
       return request(app.getHttpServer())
         .get('/reservation?initial_date={gteq}2025-11-01')
@@ -185,6 +217,13 @@ app.useGlobalPipes(
             );
           });
         });
+    });
+
+    it('should filter using {lt} operator', async () => {
+      await request(app.getHttpServer())
+        .get('/reservation?initial_date={lt}2030-01-01')
+        .set('Authorization', `Bearer ${mockAuthToken}`)
+        .expect(200);
     });
 
     it('should filter reservations by end_date with lt operator', () => {
