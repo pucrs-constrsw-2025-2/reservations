@@ -24,7 +24,7 @@ async function bootstrap() {
     )
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('api/v1/docs', app, document);
 
   // Prefixo global de API (excluindo /health)
   app.setGlobalPrefix('api/v1', {
