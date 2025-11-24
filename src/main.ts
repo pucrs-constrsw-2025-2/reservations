@@ -26,10 +26,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/v1/docs', app, document);
 
-  // Prefixo global de API (excluindo /health)
-  app.setGlobalPrefix('api/v1', {
-    exclude: ['health'],
-  });
+  // Prefixo global de API
+  app.setGlobalPrefix('api/v1');
 
   app.useGlobalPipes(
   new ValidationPipe({

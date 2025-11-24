@@ -10,7 +10,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam, ApiQuery, ApiBea
 @ApiTags('Reservation')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(AuthGuard)
-@Controller('reservation')
+@Controller('reservations')
 export class ReservationController {
   constructor(private readonly reservationService: ReservationService) {}
 
