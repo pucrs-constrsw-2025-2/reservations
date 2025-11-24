@@ -31,7 +31,7 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('Keycloak configuration not found');
     }
 
-    const validationUrl = `${keycloakGatewayUrl}/validate`;
+    const validationUrl = `${keycloakGatewayUrl}/api/v1/validate`;
 
     return this.httpService
       .post(validationUrl, {}, {
