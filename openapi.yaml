@@ -12,9 +12,11 @@ servers:
 tags:
   - name: Reservations
     description: Gerenciamento de reservas
+  - name: AuthorizedUsers
+    description: Gerenciamento de usuários autorizados
 
 paths:
-  /api/v1/reservation:
+  /api/v1/reservations:
     post:
       tags:
         - Reservations
@@ -90,7 +92,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/reservation/{id}:
+  /api/v1/reservations/{reservationId}:
     get:
       tags:
         - Reservations
@@ -99,7 +101,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - name: id
+        - name: reservationId
           in: path
           required: true
           schema:
@@ -125,7 +127,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - name: id
+        - name: reservationId
           in: path
           required: true
           schema:
@@ -159,7 +161,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - name: id
+        - name: reservationId
           in: path
           required: true
           schema:
@@ -193,7 +195,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - name: id
+        - name: reservationId
           in: path
           required: true
           schema:
@@ -207,7 +209,211 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /health:
+  /api/v1/reservations/{reservationId}/authorized-users:
+    post:
+      tags:
+        - AuthorizedUsers
+      summary: Adicionar usuário autorizado à reserva
+      operationId: addAuthorizedUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: reservationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAuthorizedUserRequest'
+      responses:
+        '201':
+          description: Usuário autorizado adicionado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizedUserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    get:
+      tags:
+        - AuthorizedUsers
+      summary: Listar usuários autorizados de uma reserva
+      operationId: getAuthorizedUsers
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: reservationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Lista de usuários autorizados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuthorizedUserResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/reservations/{reservationId}/authorized-users/{authorizedUserId}:
+    get:
+      tags:
+        - AuthorizedUsers
+      summary: Buscar usuário autorizado específico
+      operationId: getAuthorizedUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: reservationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: authorizedUserId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Dados do usuário autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizedUserResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - AuthorizedUsers
+      summary: Atualizar usuário autorizado (completo)
+      operationId: updateAuthorizedUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: reservationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: authorizedUserId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAuthorizedUserRequest'
+      responses:
+        '200':
+          description: Usuário autorizado atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizedUserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - AuthorizedUsers
+      summary: Atualizar usuário autorizado (parcial)
+      operationId: patchAuthorizedUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: reservationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: authorizedUserId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchAuthorizedUserRequest'
+      responses:
+        '200':
+          description: Usuário autorizado atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizedUserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - AuthorizedUsers
+      summary: Remover usuário autorizado da reserva
+      operationId: deleteAuthorizedUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: reservationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: authorizedUserId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Usuário autorizado removido
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/health:
     get:
       tags:
         - Health
@@ -216,6 +422,20 @@ paths:
       responses:
         '200':
           description: Serviço está funcionando
+
+  /api/v1/metrics:
+    get:
+      tags:
+        - Metrics
+      summary: Métricas Prometheus
+      operationId: getMetrics
+      responses:
+        '200':
+          description: Métricas em formato Prometheus
+          content:
+            text/plain:
+              schema:
+                type: string
 
 components:
   securitySchemes:
@@ -341,6 +561,54 @@ components:
     AuthorizedUser:
       type: object
       properties:
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+
+    CreateAuthorizedUserRequest:
+      type: object
+      required:
+        - user_id
+        - name
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 100
+
+    UpdateAuthorizedUserRequest:
+      type: object
+      required:
+        - user_id
+        - name
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 100
+
+    PatchAuthorizedUserRequest:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 100
+
+    AuthorizedUserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
         user_id:
           type: string
           format: uuid
